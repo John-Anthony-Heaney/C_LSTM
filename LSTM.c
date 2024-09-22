@@ -58,35 +58,36 @@ void input_gate(float* W_i, float* U_i, float* x_t, float* h_prev, float* b_i, f
     }
 }
 
+// Function to update the cell state
+void update_cell_state(float* f_t, float* i_t, float* c_prev, float* c_hat_t, float* c_t, int hidden_size) {
+    for (int i = 0; i < hidden_size; i++) {
+        // Update the cell state: C_t = f_t * C_{t-1} + i_t * c_hat_t
+        c_t[i] = f_t[i] * c_prev[i] + i_t[i] * c_hat_t[i];
+    }
+}
 
 int main() {
-     // Example: Input gate for one time step
+     // Example: Updating the cell state for one time step
 
-    // Define the size of the input and hidden states
-    int input_size = 3;   // Example: 3 input features
+    // Define the size of the hidden states
     int hidden_size = 2;  // Example: 2 hidden units
 
-    // Define input x_t (current input) and h_prev (previous hidden state)
-    float x_t[] = {1.0, 0.5, -1.2};  // Input vector (size 3)
-    float h_prev[] = {0.1, -0.2};    // Previous hidden state (size 2)
+    // Define the forget gate output f_t, input gate output i_t, previous cell state C_{t-1}, and candidate cell state c_hat_t
+    float f_t[] = {0.7, 0.5};           // Forget gate output (size 2)
+    float i_t[] = {0.6, 0.4};           // Input gate output (size 2)
+    float c_prev[] = {0.2, -0.1};       // Previous cell state (size 2)
+    float c_hat_t[] = {0.3, -0.5};      // Candidate cell state (size 2)
 
-    // Define weight matrices W_i and U_i, and bias b_i for input gate
-    float W_i[] = {0.4, 0.9, -0.2,   // Weight matrix for input (size 2x3)
-                   0.3, -0.5, 0.7};
-    float U_i[] = {0.1, 0.8,         // Weight matrix for hidden state (size 2x2)
-                   -0.6, 0.4};
-    float b_i[] = {0.02, -0.05};     // Bias (size 2)
+    // Define an array to store the updated cell state
+    float c_t[hidden_size];
 
-    // Define an array to store the input gate output
-    float i_t[hidden_size];
+    // Call the function to update the cell state
+    update_cell_state(f_t, i_t, c_prev, c_hat_t, c_t, hidden_size);
 
-    // Call the input gate function
-    input_gate(W_i, U_i, x_t, h_prev, b_i, i_t, input_size, hidden_size);
-
-    // Print the input gate output
-    printf("Input gate output:\n");
+    // Print the updated cell state
+    printf("Updated cell state:\n");
     for (int i = 0; i < hidden_size; i++) {
-        printf("i_t[%d] = %.5f\n", i, i_t[i]);
+        printf("C_t[%d] = %.5f\n", i, c_t[i]);
     }
 
     return 0;
