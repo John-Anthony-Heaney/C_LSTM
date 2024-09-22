@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 
 // Sigmoid function
@@ -117,65 +118,86 @@ void lstm_cell(float* W_f, float* U_f, float* b_f,
     update_hidden_state(o_t, c_t, h_t, hidden_size);
 }
 
+
+
+// Functions to generate series
+void generate_sine_wave(float* series, int length, float amplitude, float frequency) {
+    for (int t = 0; t < length; t++) {
+        series[t] = amplitude * sin(2 * M_PI * frequency * t / length);
+    }
+}
+
+void generate_linear_series(float* series, int length, float slope, float intercept) {
+    for (int t = 0; t < length; t++) {
+        series[t] = slope * t + intercept + ((rand() % 100) / 100.0 - 0.5);
+    }
+}
+
+void generate_random_walk(float* series, int length) {
+    series[0] = 0.0;
+    for (int t = 1; t < length; t++) {
+        series[t] = series[t - 1] + ((rand() % 100) / 100.0 - 0.5);
+    }
+}
+
+void generate_random_series(float* series, int length) {
+    for (int t = 0; t < length; t++) {
+        series[t] = (rand() % 100) / 100.0;
+    }
+}
+
+// Write the data to a file
+void write_time_series_to_file(const char* filename, float* series1, float* series2, float* series3, float* series4, int length) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Error opening file for writing\n");
+        return;
+    }
+
+    // Write the data in columns: Time, Series1, Series2, Series3, Series4
+    for (int t = 0; t < length; t++) {
+        fprintf(file, "%d %.5f %.5f %.5f %.5f\n", t, series1[t], series2[t], series3[t], series4[t]);
+    }
+
+    fclose(file);
+    printf("Data has been written to %s\n", filename);
+}
+
+
+// Function to plot the data using gnuplot
+void plot_with_gnuplot() {
+    FILE *gnuplotPipe = popen("gnuplot -persistent", "w");
+
+    // Set plot title and labels
+    fprintf(gnuplotPipe, "set title 'Multivariate Time Series Data'\n");
+    fprintf(gnuplotPipe, "set xlabel 'Time'\n");
+    fprintf(gnuplotPipe, "set ylabel 'Value'\n");
+    fprintf(gnuplotPipe, "set grid\n");
+
+    // Plot the data from the file
+    fprintf(gnuplotPipe, "plot 'time_series_data.dat' using 1:2 title 'Sine Wave' with lines, "
+                         "'time_series_data.dat' using 1:3 title 'Linear + Noise' with lines, "
+                         "'time_series_data.dat' using 1:4 title 'Random Walk' with lines, "
+                         "'time_series_data.dat' using 1:5 title 'Random Series' with lines\n");
+
+    fflush(gnuplotPipe); // Ensure the commands are sent to gnuplot
+    pclose(gnuplotPipe); // Close the pipe when done
+}
+
+
 int main() {
-    // Example: LSTM cell for one time step
+    int length = 100;
 
-    // Define the size of the input and hidden states
-    int input_size = 3;   // Example: 3 input features
-    int hidden_size = 2;  // Example: 2 hidden units
+    // Generate and save time series data (same as before)
+    float sine_wave[length], linear_series[length], random_walk[length], random_series[length];
+    generate_sine_wave(sine_wave, length, 1.0, 0.1);
+    generate_linear_series(linear_series, length, 0.5, 0.0);
+    generate_random_walk(random_walk, length);
+    generate_random_series(random_series, length);
+    write_time_series_to_file("time_series_data.dat", sine_wave, linear_series, random_walk, random_series, length);
 
-    // Define input x_t (current input) and previous states (h_prev, c_prev)
-    float x_t[] = {1.0, 0.5, -1.2};    // Input vector (size 3)
-    float h_prev[] = {0.1, -0.2};      // Previous hidden state (size 2)
-    float c_prev[] = {0.2, -0.1};      // Previous cell state (size 2)
-
-    // Define weight matrices and biases for each gate
-    // Forget gate parameters
-    float W_f[] = {0.5, 0.8, -0.3,   // Weight matrix for input (size 2x3)
-                   -0.1, 0.4, 0.7};
-    float U_f[] = {0.2, 0.6,         // Weight matrix for hidden state (size 2x2)
-                   -0.5, 0.9};
-    float b_f[] = {0.05, -0.1};      // Bias for forget gate
-
-    // Input gate parameters
-    float W_i[] = {0.4, 0.9, -0.2,   // Weight matrix for input (size 2x3)
-                   0.3, -0.5, 0.7};
-    float U_i[] = {0.1, 0.8,         // Weight matrix for hidden state (size 2x2)
-                   -0.6, 0.4};
-    float b_i[] = {0.02, -0.05};     // Bias for input gate
-
-    // Cell state update parameters
-    float W_c[] = {0.3, -0.1, 0.2,   // Weight matrix for input (size 2x3)
-                   -0.4, 0.6, -0.7};
-    float U_c[] = {0.5, -0.3,        // Weight matrix for hidden state (size 2x2)
-                   0.4, -0.2};
-    float b_c[] = {0.01, 0.02};      // Bias for cell state update
-
-    // Output gate parameters
-    float W_o[] = {0.6, -0.7, 0.4,   // Weight matrix for input (size 2x3)
-                   0.5, -0.2, 0.8};
-    float U_o[] = {0.3, 0.9,         // Weight matrix for hidden state (size 2x2)
-                   -0.4, 0.2};
-    float b_o[] = {0.04, -0.06};     // Bias for output gate
-
-    // Define arrays to store the updated hidden state and cell state
-    float h_t[hidden_size];
-    float c_t[hidden_size];
-
-    // Call the full LSTM cell function
-    lstm_cell(W_f, U_f, b_f, W_i, U_i, b_i, W_c, U_c, b_c, W_o, U_o, b_o,
-              x_t, h_prev, c_prev, h_t, c_t, input_size, hidden_size);
-
-    // Print the updated hidden state and cell state
-    printf("Updated hidden state:\n");
-    for (int i = 0; i < hidden_size; i++) {
-        printf("h_t[%d] = %.5f\n", i, h_t[i]);
-    }
-
-    printf("\nUpdated cell state:\n");
-    for (int i = 0; i < hidden_size; i++) {
-        printf("c_t[%d] = %.5f\n", i, c_t[i]);
-    }
+    // Plot the data using gnuplot
+    plot_with_gnuplot();
 
     return 0;
 }
