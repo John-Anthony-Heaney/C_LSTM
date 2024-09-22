@@ -11,23 +11,34 @@ float tanh_activation(float x) {
     return tanh(x);
 }
 
-int main() {
-    // Test values
-    float test_values[] = {-2.0, -1.0, 0.0, 1.0, 2.0};
-    int num_values = sizeof(test_values) / sizeof(test_values[0]);
-
-    // Test sigmoid function
-    printf("Testing Sigmoid Function:\n");
-    for (int i = 0; i < num_values; i++) {
-        float x = test_values[i];
-        printf("sigmoid(%.2f) = %.5f\n", x, sigmoid(x));
+// Function to multiply a matrix with a vector
+void matvec_mul(float* matrix, float* vector, float* result, int rows, int cols) {
+    // Loop through rows of the matrix
+    for (int i = 0; i < rows; i++) {
+        result[i] = 0;  // Initialize result element
+        for (int j = 0; j < cols; j++) {
+            result[i] += matrix[i * cols + j] * vector[j];
+        }
     }
+}
 
-    // Test tanh function
-    printf("\nTesting Tanh Function:\n");
-    for (int i = 0; i < num_values; i++) {
-        float x = test_values[i];
-        printf("tanh(%.2f) = %.5f\n", x, tanh_activation(x));
+int main() {
+    // Define a 2x3 matrix
+    float matrix[] = {1, 2, 3, 4, 5, 6};
+    
+    // Define a vector of size 3
+    float vector[] = {1, 2, 3};
+    
+    // Result will be a vector of size 2
+    float result[2];
+
+    // Perform matrix-vector multiplication
+    matvec_mul(matrix, vector, result, 2, 3);
+
+    // Print the result
+    printf("Matrix-Vector Multiplication Result:\n");
+    for (int i = 0; i < 2; i++) {
+        printf("%.2f\n", result[i]);
     }
 
     return 0;
