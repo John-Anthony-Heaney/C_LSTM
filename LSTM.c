@@ -146,6 +146,44 @@ void generate_random_series(float* series, int length) {
     }
 }
 
+
+// Function implementations for new time series generators
+void generate_exponential_decay(float* series, int length, float initial_value, float decay_rate) {
+    for (int t = 0; t < length; t++) {
+        series[t] = initial_value * exp(-decay_rate * t);
+    }
+}
+
+void generate_cosine_wave(float* series, int length, float amplitude, float frequency) {
+    for (int t = 0; t < length; t++) {
+        series[t] = amplitude * cos(2 * M_PI * frequency * t / length);
+    }
+}
+
+void generate_logarithmic_series(float* series, int length, float base) {
+    for (int t = 1; t < length; t++) {
+        series[t] = log(t) / log(base);
+    }
+    series[0] = 0.0; // Log(0) is undefined, set to 0
+}
+
+void generate_quadratic_series(float* series, int length, float a, float b, float c) {
+    for (int t = 0; t < length; t++) {
+        series[t] = a * t * t + b * t + c;
+    }
+}
+
+
+// Large random oscillations function
+void generate_large_random_oscillations(float* series, int length, float amplitude, float frequency, float noise_factor) {
+    for (int t = 0; t < length; t++) {
+        float sine_value = amplitude * sin(2 * M_PI * frequency * t / length);
+        float random_noise = ((rand() % 200) / 100.0 - 1.0) * noise_factor; // Random noise between -noise_factor and +noise_factor
+        series[t] = sine_value + random_noise;
+    }
+}
+
+
 // Write the data to a file
 void write_time_series_to_file(const char* filename, float* series1, float* series2, float* series3, float* series4, int length) {
     FILE *file = fopen(filename, "w");
@@ -169,32 +207,47 @@ void plot_with_gnuplot() {
     FILE *gnuplotPipe = popen("gnuplot -persistent", "w");
 
     // Set plot title and labels
-    fprintf(gnuplotPipe, "set title 'Multivariate Time Series Data'\n");
+    fprintf(gnuplotPipe, "set title 'Multivariate Time Series Data with Large Oscillations'\n");
     fprintf(gnuplotPipe, "set xlabel 'Time'\n");
     fprintf(gnuplotPipe, "set ylabel 'Value'\n");
     fprintf(gnuplotPipe, "set grid\n");
 
     // Plot the data from the file
-    fprintf(gnuplotPipe, "plot 'time_series_data.dat' using 1:2 title 'Sine Wave' with lines, "
-                         "'time_series_data.dat' using 1:3 title 'Linear + Noise' with lines, "
-                         "'time_series_data.dat' using 1:4 title 'Random Walk' with lines, "
-                         "'time_series_data.dat' using 1:5 title 'Random Series' with lines\n");
+    fprintf(gnuplotPipe, "plot 'time_series_data_large_oscillations.dat' using 1:2 title 'Sine Wave' with lines, "
+                         "'time_series_data_large_oscillations.dat' using 1:3 title 'Linear Series' with lines, "
+                         "'time_series_data_large_oscillations.dat' using 1:4 title 'Large Random Oscillations' with lines, "
+                         "'time_series_data_large_oscillations.dat' using 1:5 title 'Random Series' with lines\n");
 
     fflush(gnuplotPipe); // Ensure the commands are sent to gnuplot
     pclose(gnuplotPipe); // Close the pipe when done
 }
 
 
+
+
 int main() {
     int length = 100;
 
-    // Generate and save time series data (same as before)
+    // Generate and save time series data
     float sine_wave[length], linear_series[length], random_walk[length], random_series[length];
+    float exponential_decay[length], cosine_wave[length], logarithmic_series[length], quadratic_series[length];
+    float large_random_oscillations[length];
+
     generate_sine_wave(sine_wave, length, 1.0, 0.1);
     generate_linear_series(linear_series, length, 0.5, 0.0);
     generate_random_walk(random_walk, length);
     generate_random_series(random_series, length);
-    write_time_series_to_file("time_series_data.dat", sine_wave, linear_series, random_walk, random_series, length);
+
+    generate_exponential_decay(exponential_decay, length, 10.0, 0.1);
+    generate_cosine_wave(cosine_wave, length, 1.0, 0.1);
+    generate_logarithmic_series(logarithmic_series, length, 2.0);
+    generate_quadratic_series(quadratic_series, length, 0.01, 0.5, 0.0);
+
+    // New large random oscillations series
+    generate_large_random_oscillations(large_random_oscillations, length, 2.0, 0.05, 5.0); // Large oscillations with noise
+
+    // Save new series data into the file
+    write_time_series_to_file("time_series_data_large_oscillations.dat", sine_wave,cosine_wave, large_random_oscillations, random_series, length);
 
     // Plot the data using gnuplot
     plot_with_gnuplot();
