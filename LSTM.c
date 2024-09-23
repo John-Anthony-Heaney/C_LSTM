@@ -184,17 +184,24 @@ void generate_large_random_oscillations(float* series, int length, float amplitu
 }
 
 
-// Write the data to a file
-void write_time_series_to_file(const char* filename, float* series1, float* series2, float* series3, float* series4, int length) {
+void generate_gamma_like_curve(float* series, int length, float a, float b) {
+    for (int t = 0; t < length; t++) {
+        series[t] = pow(t, a) * exp(-b * t);
+    }
+}
+
+
+// Function to write the curve data to a file
+void write_curve_to_file(const char* filename, float* series, int length) {
     FILE *file = fopen(filename, "w");
     if (file == NULL) {
         printf("Error opening file for writing\n");
         return;
     }
 
-    // Write the data in columns: Time, Series1, Series2, Series3, Series4
+    // Write the data in columns: Time and Value
     for (int t = 0; t < length; t++) {
-        fprintf(file, "%d %.5f %.5f %.5f %.5f\n", t, series1[t], series2[t], series3[t], series4[t]);
+        fprintf(file, "%d %.5f\n", t, series[t]);
     }
 
     fclose(file);
@@ -202,21 +209,18 @@ void write_time_series_to_file(const char* filename, float* series1, float* seri
 }
 
 
-// Function to plot the data using gnuplot
-void plot_with_gnuplot() {
+// Function to plot the curve using gnuplot
+void plot_with_gnuplot(const char* filename) {
     FILE *gnuplotPipe = popen("gnuplot -persistent", "w");
 
     // Set plot title and labels
-    fprintf(gnuplotPipe, "set title 'Multivariate Time Series Data with Large Oscillations'\n");
+    fprintf(gnuplotPipe, "set title 'Gamma-like Curve'\n");
     fprintf(gnuplotPipe, "set xlabel 'Time'\n");
     fprintf(gnuplotPipe, "set ylabel 'Value'\n");
     fprintf(gnuplotPipe, "set grid\n");
 
     // Plot the data from the file
-    fprintf(gnuplotPipe, "plot 'time_series_data_large_oscillations.dat' using 1:2 title 'Sine Wave' with lines, "
-                         "'time_series_data_large_oscillations.dat' using 1:3 title 'Linear Series' with lines, "
-                         "'time_series_data_large_oscillations.dat' using 1:4 title 'Large Random Oscillations' with lines, "
-                         "'time_series_data_large_oscillations.dat' using 1:5 title 'Random Series' with lines\n");
+    fprintf(gnuplotPipe, "plot '%s' using 1:2 title 'Gamma-like Curve' with lines\n", filename);
 
     fflush(gnuplotPipe); // Ensure the commands are sent to gnuplot
     pclose(gnuplotPipe); // Close the pipe when done
@@ -227,30 +231,18 @@ void plot_with_gnuplot() {
 
 int main() {
     int length = 100;
+    float a = 3.0, b = 0.1;  // Parameters for the curve
+    float series[length];
 
-    // Generate and save time series data
-    float sine_wave[length], linear_series[length], random_walk[length], random_series[length];
-    float exponential_decay[length], cosine_wave[length], logarithmic_series[length], quadratic_series[length];
-    float large_random_oscillations[length];
+    // Generate the curve
+    generate_gamma_like_curve(series, length, a, b);
 
-    generate_sine_wave(sine_wave, length, 1.0, 0.1);
-    generate_linear_series(linear_series, length, 0.5, 0.0);
-    generate_random_walk(random_walk, length);
-    generate_random_series(random_series, length);
+    // Write the data to a file
+    const char* filename = "gamma_like_curve.dat";
+    write_curve_to_file(filename, series, length);
 
-    generate_exponential_decay(exponential_decay, length, 10.0, 0.1);
-    generate_cosine_wave(cosine_wave, length, 1.0, 0.1);
-    generate_logarithmic_series(logarithmic_series, length, 2.0);
-    generate_quadratic_series(quadratic_series, length, 0.01, 0.5, 0.0);
-
-    // New large random oscillations series
-    generate_large_random_oscillations(large_random_oscillations, length, 2.0, 0.05, 5.0); // Large oscillations with noise
-
-    // Save new series data into the file
-    write_time_series_to_file("time_series_data_large_oscillations.dat", sine_wave,cosine_wave, large_random_oscillations, random_series, length);
-
-    // Plot the data using gnuplot
-    plot_with_gnuplot();
+    // Plot the curve using gnuplot
+    plot_with_gnuplot(filename);
 
     return 0;
 }
