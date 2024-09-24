@@ -147,12 +147,7 @@ void generate_random_series(float* series, int length) {
 }
 
 
-// Function implementations for new time series generators
-void generate_exponential_decay(float* series, int length, float initial_value, float decay_rate) {
-    for (int t = 0; t < length; t++) {
-        series[t] = initial_value * exp(-decay_rate * t);
-    }
-}
+
 
 void generate_cosine_wave(float* series, int length, float amplitude, float frequency) {
     for (int t = 0; t < length; t++) {
@@ -170,6 +165,13 @@ void generate_logarithmic_series(float* series, int length, float base) {
 void generate_quadratic_series(float* series, int length, float a, float b, float c) {
     for (int t = 0; t < length; t++) {
         series[t] = a * t * t + b * t + c;
+    }
+}
+
+// Function to generate an exponential decay curve
+void generate_exponential_decay(float* series, int length, float A, float b) {
+    for (int t = 0; t < length; t++) {
+        series[t] = A * exp(-b * t);
     }
 }
 
@@ -208,19 +210,18 @@ void write_curve_to_file(const char* filename, float* series, int length) {
     printf("Data has been written to %s\n", filename);
 }
 
-
 // Function to plot the curve using gnuplot
 void plot_with_gnuplot(const char* filename) {
     FILE *gnuplotPipe = popen("gnuplot -persistent", "w");
 
     // Set plot title and labels
-    fprintf(gnuplotPipe, "set title 'Gamma-like Curve'\n");
+    fprintf(gnuplotPipe, "set title 'Exponential Decay Curve'\n");
     fprintf(gnuplotPipe, "set xlabel 'Time'\n");
     fprintf(gnuplotPipe, "set ylabel 'Value'\n");
     fprintf(gnuplotPipe, "set grid\n");
 
     // Plot the data from the file
-    fprintf(gnuplotPipe, "plot '%s' using 1:2 title 'Gamma-like Curve' with lines\n", filename);
+    fprintf(gnuplotPipe, "plot '%s' using 1:2 title 'Exponential Decay' with lines\n", filename);
 
     fflush(gnuplotPipe); // Ensure the commands are sent to gnuplot
     pclose(gnuplotPipe); // Close the pipe when done
@@ -231,14 +232,17 @@ void plot_with_gnuplot(const char* filename) {
 
 int main() {
     int length = 100;
-    float a = 3.0, b = 0.1;  // Parameters for the curve
     float series[length];
 
-    // Generate the curve
-    generate_gamma_like_curve(series, length, a, b);
+    // Parameters for the exponential decay
+    float A = 10.0;  // Initial amplitude
+    float b = 0.1;   // Decay rate
+
+    // Generate the exponential decay curve
+    generate_exponential_decay(series, length, A, b);
 
     // Write the data to a file
-    const char* filename = "gamma_like_curve.dat";
+    const char* filename = "exponential_decay_curve.dat";
     write_curve_to_file(filename, series, length);
 
     // Plot the curve using gnuplot
